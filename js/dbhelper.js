@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 /**
  * Common database helper functions.
  */
@@ -8,7 +10,7 @@ class DBHelper {
    * Change this to restaurants.json file location on your server.
    */
   static get DATABASE_URL() {
-    const port = 8000 // Change this to your server port
+    const port = 8234; // Change this to your server port
     return `http://localhost:${port}/data/restaurants.json`;
   }
 
@@ -151,6 +153,10 @@ class DBHelper {
    */
   static imageUrlForRestaurant(restaurant) {
     return (`/img/${restaurant.photograph}`);
+  }
+
+  static imageUrlForRestaurant475(restaurant) {
+    return (`/img/475/${restaurant.photograph}`);
   }
 
   /**

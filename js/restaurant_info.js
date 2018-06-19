@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 let restaurant;
 var map;
 
@@ -25,12 +27,12 @@ window.initMap = () => {
  */
 fetchRestaurantFromURL = (callback) => {
   if (self.restaurant) { // restaurant already fetched!
-    callback(null, self.restaurant)
+    callback(null, self.restaurant);
     return;
   }
   const id = getParameterByName('id');
   if (!id) { // no id found in URL
-    error = 'No restaurant id in URL'
+    error = 'No restaurant id in URL';
     callback(error, null);
   } else {
     DBHelper.fetchRestaurantById(id, (error, restaurant) => {
@@ -40,7 +42,7 @@ fetchRestaurantFromURL = (callback) => {
         return;
       }
       fillRestaurantHTML();
-      callback(null, restaurant)
+      callback(null, restaurant);
     });
   }
 }
@@ -55,9 +57,26 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
 
-  const image = document.getElementById('restaurant-img');
-  image.className = 'restaurant-img'
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  const pic = document.getElementById('restaurant-img');
+  const url320 = DBHelper.imageUrlForRestaurant(restaurant);
+
+  const src320 = document.createElement('source');
+  src320.setAttribute('srcset', url320);
+  src320.setAttribute('media', '(max-width: 320px)');
+
+  const src475 = document.createElement('source');
+  src475.setAttribute('srcset', DBHelper.imageUrlForRestaurant475(restaurant));
+
+  const image = document.createElement('img');
+  image.setAttribute('src', url320);
+  image.className = 'restaurant-img';
+  image.setAttribute('title',`Photo representing ${restaurant.name} restaurant.`);
+
+  pic.appendChild(src320);
+  pic.appendChild(src475);
+  pic.appendChild(image);
+
+
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
@@ -79,10 +98,12 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
     const row = document.createElement('tr');
 
     const day = document.createElement('td');
-    day.innerHTML = key;
+    day.setAttribute('class','day');
+    day.innerHTML = `<span class="small-day"><abbr title='${key}'>${key.substring(0,3).toUpperCase()}</abbr></span><span class="big-day">${key}</span>`;
     row.appendChild(day);
 
     const time = document.createElement('td');
+    time.setAttribute('class','time');
     time.innerHTML = operatingHours[key];
     row.appendChild(time);
 
@@ -97,6 +118,7 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   const container = document.getElementById('reviews-container');
   const title = document.createElement('h2');
   title.innerHTML = 'Reviews';
+  title.setAttribute('class','res-reviews');
   container.appendChild(title);
 
   if (!reviews) {
@@ -117,23 +139,69 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
  */
 createReviewHTML = (review) => {
   const li = document.createElement('li');
-  const name = document.createElement('p');
-  name.innerHTML = review.name;
-  li.appendChild(name);
 
-  const date = document.createElement('p');
-  date.innerHTML = review.date;
-  li.appendChild(date);
-
-  const rating = document.createElement('p');
-  rating.innerHTML = `Rating: ${review.rating}`;
-  li.appendChild(rating);
+  li.appendChild(createReviewHeader320(review));
+  li.appendChild(createReviewHeader475(review));
 
   const comments = document.createElement('p');
   comments.innerHTML = review.comments;
+  comments.setAttribute('class','rev-comments');
   li.appendChild(comments);
 
   return li;
+}
+
+createReviewHeader320 = (review) => {
+  const div = document.createElement('div');
+  div.setAttribute('class','rev-header-320');
+
+  const name = document.createElement('p');
+  name.innerHTML = `${review.name} (${review.date})`;
+  name.setAttribute('class', 'rev-name');
+  div.appendChild(name);
+
+  const rule = document.createElement('div');
+  rule.setAttribute('class','rev-rule');
+  div.appendChild(rule);
+
+  const rating = document.createElement('p');
+  rating.appendChild(createRating(review.rating));
+  rating.setAttribute('class', 'rev-rating');
+  div.appendChild(rating);
+
+  return div;
+}
+
+createReviewHeader475 = (review) => {
+  const div = document.createElement('div');
+  div.setAttribute('class','rev-header-475');
+
+  const name = document.createElement('div');
+  name.innerHTML = `${review.name} (${review.date})`;
+  name.setAttribute('class', 'rev-name');
+  div.appendChild(name);
+
+  const rating = document.createElement('div');
+  rating.setAttribute('class', 'rev-rating');
+  rating.appendChild(createRating(review.rating));
+
+  div.appendChild(rating);
+
+  return div;
+}
+
+createRating = (ratingCount) => {
+  const rating = document.createElement('span');
+
+  for(let i = 0; i < ratingCount; i++){
+    const star = document.createElement('img');
+    star.src = '/img/star.svg';
+    rating.appendChild(star);
+  }
+
+  rating.setAttribute('title', `Rating: ${ratingCount}`);
+
+  return rating;
 }
 
 /**
